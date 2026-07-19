@@ -115,3 +115,18 @@ The first milestone proves that:
 The first meaningful vertical slice will prove that an authenticated user can save and retrieve
 their profile while authorization tests prevent them from reading or modifying another user's
 private data.
+
+
+#Backend roadmap
+After accounts, the backend roadmap is:
+Profile onboarding
+Photo metadata and object storage (can leave to later, all text only first)
+Discovery
+Likes and mutual matches
+Conversations and messages
+Blocking and reporting
+
+# data model and api 
+user 
+
+
