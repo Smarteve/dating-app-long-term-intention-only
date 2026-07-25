@@ -1,0 +1,72 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint, type-check, migrate, and test
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+psycopg://dating_app_test:dating_app_test@localhost:5433/dating_app_test
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: dating_app_test
+          POSTGRES_USER: dating_app_test
+          POSTGRES_PASSWORD: dating_app_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U dating_app_test -d dating_app_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          working-directory: backend
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: "backend/uv.lock"
+
+      - name: Install locked dependencies
+        run: uv sync --locked --all-groups
+
+      - name: Lint
+        run: uv run --frozen ruff check app tests migrations
+
+      - name: Type-check
+        run: uv run --frozen mypy app tests
+
+      - name: Apply migrations
+        run: uv run --frozen alembic upgrade head
+
+      - name: Check model and migration consistency
+        run: uv run --frozen alembic check
+
+      - name: Run tests
+        run: uv run --frozen pytest
