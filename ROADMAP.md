@@ -124,6 +124,17 @@ Session behaviour:
 Completion criterion: authenticated requests resolve exactly one account, revoked sessions stop
 working, and users cannot access another account's private resources.
 
+Add Auth0 configuration fields.
+Add the Session SQLAlchemy model.
+Generate and apply its migration.
+Implement Auth0 JWT verification.
+Implement POST /api/v1/sessions/exchange.
+Generate and hash first-party session tokens.
+Implement the current-account FastAPI dependency.
+Implement current-device and all-device logout.
+Add session expiry and revocation tests.
+Build the Expo Auth0 flow and SecureStore integration.
+
 ## Milestone 2: Text-only profile onboarding
 
 Build the first complete backend vertical slice:

@@ -15,6 +15,10 @@ TEST_DATABASE_URL = (
 # This must happen before importing modules that call get_settings().
 os.environ["APP_ENV"] = "test"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["IDENTITY_PROVIDER_ISSUER"] = (
+    "https://identity-provider.test/auth/v1"
+)
+os.environ["IDENTITY_PROVIDER_AUDIENCE"] = "authenticated"
 
 
 @pytest.fixture(scope="session")

@@ -25,7 +25,9 @@ jobs:
     env:
       APP_ENV: test
       DATABASE_URL: postgresql+psycopg://dating_app_test:dating_app_test@localhost:5433/dating_app_test
-
+      IDENTITY_PROVIDER_ISSUER: https://identity-provider.test/auth/v1
+      IDENTITY_PROVIDER_AUDIENCE: authenticated
+    
     services:
       postgres:
         image: postgres:17-alpine

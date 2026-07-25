@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     database_url: str
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
+    identity_provider_issuer: str
+    identity_provider_audience: str
+
     model_config = SettingsConfigDict(
         env_file=_ENV_FILE,
         env_file_encoding="utf-8",
