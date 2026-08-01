@@ -119,10 +119,42 @@ def revoke_session(
     if account_session is None:
         return False
 
-    if account_session.revoked_at is None:
-        account_session.revoked_at = current_time
+    revoke_account_session(
+        account_session,
+        now=current_time,
+    )
 
     return True
+
+
+def revoke_account_session(
+    account_session: AccountSession,
+    *,
+    now: datetime | None = None,
+) -> None:
+    if account_session.revoked_at is None:
+        account_session.revoked_at = now or datetime.now(UTC)
+
+
+def list_active_sessions(
+    db: Session,
+    account_id: UUID,
+    *,
+    now: datetime | None = None,
+) -> list[AccountSession]:
+    current_time = now or datetime.now(UTC)
+
+    statement = (
+        select(AccountSession)
+        .where(
+            AccountSession.account_id == account_id,
+            AccountSession.revoked_at.is_(None),
+            AccountSession.expires_at > current_time,
+        )
+        .order_by(AccountSession.created_at.desc())
+    )
+
+    return list(db.scalars(statement))
 
 
 def revoke_all_sessions(

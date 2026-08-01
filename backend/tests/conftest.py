@@ -2,9 +2,14 @@ import os
 from collections.abc import Generator
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
+
+from app.db.session import get_db_session
+from app.main import create_app
 
 
 TEST_DATABASE_URL = (
@@ -50,3 +55,24 @@ def db_session(test_engine: Engine) -> Generator[Session, None, None]:
         session.close()
         transaction.rollback()
         connection.close()
+
+
+@pytest.fixture
+def test_app(db_session: Session) -> Generator[FastAPI, None, None]:
+    application = create_app()
+
+    def override_db_session() -> Generator[Session, None, None]:
+        yield db_session
+
+    application.dependency_overrides[get_db_session] = override_db_session
+
+    try:
+        yield application
+    finally:
+        application.dependency_overrides.clear()
+
+
+@pytest.fixture
+def client(test_app: FastAPI) -> Generator[TestClient, None, None]:
+    with TestClient(test_app) as test_client:
+        yield test_client
