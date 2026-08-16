@@ -30,7 +30,7 @@ export default function RootLayout() {
 
 function RootLayoutContent() {
   const colorScheme = useColorScheme();
-  const { isLoading } = useSessionContext();
+  const {session, isLoading } = useSessionContext();
 
   if (isLoading) {
     return (
@@ -43,13 +43,26 @@ function RootLayoutContent() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Protected guard={session !== null}>
+          <Stack.Screen
+            name="(tabs)"
+            options={{ headerShown: false }}
+          />
+        </Stack.Protected>
+
+        <Stack.Protected guard={session === null}>
+          <Stack.Screen
+            name="sign-in"
+            options={{ headerShown: false }}
+          />
+        </Stack.Protected>
       </Stack>
+
       <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
+
 
 
 const styles = StyleSheet.create({

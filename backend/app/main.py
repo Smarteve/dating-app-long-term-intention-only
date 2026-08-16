@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.accounts.router import router as accounts_router
 from app.api.health import router as health_router
@@ -17,6 +18,21 @@ def create_app() -> FastAPI:
     )
 
     application.add_middleware(RequestLoggingMiddleware)
+    application.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "http://192.168.0.13:8081",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+    application.add_middleware(RequestLoggingMiddleware)
+    application.include_router(health_router)
+    application.include_router(accounts_router)
     application.include_router(health_router)
     application.include_router(accounts_router)
 
