@@ -21,8 +21,16 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  return (
+    <SessionProvider>
+      <RootLayoutContent />
+    </SessionProvider>
+  );
+}
+
+function RootLayoutContent() {
   const colorScheme = useColorScheme();
-  const {isLoading} = useSessionContext()
+  const { isLoading } = useSessionContext();
 
   if (isLoading) {
     return (
@@ -33,15 +41,13 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </SessionProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
   );
 }
 

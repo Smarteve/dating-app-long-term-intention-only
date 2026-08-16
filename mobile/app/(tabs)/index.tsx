@@ -10,11 +10,12 @@ import {
   View,
 } from 'react-native';
 
+import { useSessionContext } from '@/contexts/session-context';
 import { exchangeSupabaseToken } from '@/lib/session-api';
-import { saveSession } from '@/lib/session-storage';
 import { supabase } from '@/lib/supabase';
 
 export default function SignInScreen() {
+  const { establishSession } = useSessionContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +49,7 @@ export default function SignInScreen() {
       const supabaseToken = data.session.access_token;
       const session = await exchangeSupabaseToken(supabaseToken);
 
-      await saveSession(session);
+      await establishSession(session);
       setMessage(`Signed in as ${data.user.email}`);
     } catch (error) {
       setMessage(
