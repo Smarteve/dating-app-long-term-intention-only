@@ -1,98 +1,192 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { exchangeSupabaseToken } from '@/lib/session-api';
+import { saveSession } from '@/lib/session-storage';
+import { supabase } from '@/lib/supabase';
 
-export default function HomeScreen() {
+export default function SignInScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function handleSignIn() {
+    if (!email.trim() || !password) {
+      setMessage('Enter your email and password.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      if (!data.session) {
+        setMessage('Sign-in completed, but no token was returned.');
+        return;
+      }
+
+      const supabaseToken = data.session.access_token;
+      const session = await exchangeSupabaseToken(supabaseToken);
+
+      await saveSession(session);
+      setMessage(`Signed in as ${data.user.email}`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : 'Unable to sign in.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={styles.screen}
+    >
+      <View style={styles.form}>
+        <Text style={styles.eyebrow}>DATING WITH INTENTION</Text>
+        <Text style={styles.title}>Welcome back</Text>
+        <Text style={styles.description}>
+          Sign in to continue building meaningful connections.
+        </Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.field}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="email"
+            editable={!isSubmitting}
+            keyboardType="email-address"
+            onChangeText={setEmail}
+            placeholder="you@example.com"
+            style={styles.input}
+            value={email}
+          />
+        </View>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            autoCapitalize="none"
+            autoComplete="current-password"
+            editable={!isSubmitting}
+            onChangeText={setPassword}
+            onSubmitEditing={handleSignIn}
+            placeholder="Your password"
+            secureTextEntry
+            style={styles.input}
+            value={password}
+          />
+        </View>
+
+        {message ? <Text style={styles.message}>{message}</Text> : null}
+
+        <Pressable
+          disabled={isSubmitting}
+          onPress={handleSignIn}
+          style={({ pressed }) => [
+            styles.button,
+            isSubmitting && styles.buttonDisabled,
+            pressed && styles.buttonPressed,
+          ]}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign in</Text>
+          )}
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  screen: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: '#faf7ff',
+    padding: 24,
   },
-  stepContainer: {
-    gap: 8,
+  form: {
+    gap: 18,
+  },
+  eyebrow: {
+    color: '#7c3aed',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  title: {
+    color: '#201a2e',
+    fontSize: 38,
+    fontWeight: '800',
+  },
+  description: {
+    color: '#625b70',
+    fontSize: 16,
+    lineHeight: 24,
     marginBottom: 8,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  field: {
+    gap: 7,
+  },
+  label: {
+    color: '#352f40',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderColor: '#d8d1e1',
+    borderRadius: 12,
+    borderWidth: 1,
+    color: '#201a2e',
+    fontSize: 16,
+    minHeight: 52,
+    paddingHorizontal: 15,
+  },
+  message: {
+    color: '#b42318',
+    fontSize: 14,
+  },
+  button: {
+    alignItems: 'center',
+    backgroundColor: '#7c3aed',
+    borderRadius: 12,
+    justifyContent: 'center',
+    minHeight: 54,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
