@@ -97,9 +97,10 @@ using documented commands.
 
 ## Milestone 1: Authentication and first-party sessions
 
-Use an email magic link, OAuth provider, or managed identity provider to verify identity. Do not
-implement password storage as part of this project. Exchange the verified identity for a
-first-party application session.
+Use Supabase Auth as the identity provider. The initial client flow uses Supabase email/password
+authentication; Supabase may later provide magic links or social OAuth without changing the
+application-session layer. Do not implement password storage in this project. Exchange the
+verified Supabase identity for a first-party application session.
 
 Suggested `sessions` fields:
 
@@ -116,7 +117,7 @@ Session behaviour:
 
 - Generate cryptographically random opaque tokens.
 - Store only token hashes in PostgreSQL.
-- Store the raw token in Expo SecureStore.
+- Store the raw token in Expo SecureStore on native platforms and browser storage on web.
 - Support rotation, logout, logout from all devices, expiry, and account suspension.
 - Rate-limit authentication endpoints.
 - Begin with PostgreSQL-backed sessions; introduce Redis only when justified.
@@ -124,16 +125,16 @@ Session behaviour:
 Completion criterion: authenticated requests resolve exactly one account, revoked sessions stop
 working, and users cannot access another account's private resources.
 
-Add Auth0 configuration fields.
+Add Supabase configuration fields (project URL, publishable key, JWT issuer, and audience).
 Add the Session SQLAlchemy model.
 Generate and apply its migration.
-Implement Auth0 JWT verification.
+Implement Supabase JWT verification using the project issuer and audience.
 Implement POST /api/v1/sessions/exchange.
 Generate and hash first-party session tokens.
 Implement the current-account FastAPI dependency.
 Implement current-device and all-device logout.
 Add session expiry and revocation tests.
-Build the Expo Auth0 flow and SecureStore integration.
+Build the Expo Supabase Auth flow and native SecureStore integration, with browser storage for web.
 
 ## Milestone 2: Text-only profile onboarding
 
